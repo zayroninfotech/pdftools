@@ -751,6 +751,7 @@ def audit_log_view(request):
 
 # ─── PDF TOOL VIEWS ─────────────────────────────────────────────────────────
 
+@csrf_exempt
 def merge_view(request):
     def process(req):
         files = req.FILES.getlist('files')
@@ -761,6 +762,7 @@ def merge_view(request):
     return _process_and_respond(request, 'merge', process)
 
 
+@csrf_exempt
 def split_view(request):
     def process(req):
         f = req.FILES.get('files')
@@ -773,6 +775,7 @@ def split_view(request):
     return _process_and_respond(request, 'split', process)
 
 
+@csrf_exempt
 def compress_view(request):
     def process(req):
         f = req.FILES.get('files')
@@ -783,6 +786,7 @@ def compress_view(request):
     return _process_and_respond(request, 'compress', process)
 
 
+@csrf_exempt
 def pdf_to_word_view(request):
     def process(req):
         f = req.FILES.get('files')
@@ -793,6 +797,7 @@ def pdf_to_word_view(request):
     return _process_and_respond(request, 'pdf_to_word', process)
 
 
+@csrf_exempt
 def word_to_pdf_view(request):
     def process(req):
         f = req.FILES.get('files')
@@ -803,6 +808,7 @@ def word_to_pdf_view(request):
     return _process_and_respond(request, 'word_to_pdf', process)
 
 
+@csrf_exempt
 def pdf_to_jpg_view(request):
     def process(req):
         f = req.FILES.get('files')
@@ -813,6 +819,7 @@ def pdf_to_jpg_view(request):
     return _process_and_respond(request, 'pdf_to_jpg', process)
 
 
+@csrf_exempt
 def jpg_to_pdf_view(request):
     def process(req):
         files = req.FILES.getlist('files')
@@ -823,6 +830,7 @@ def jpg_to_pdf_view(request):
     return _process_and_respond(request, 'jpg_to_pdf', process)
 
 
+@csrf_exempt
 def rotate_view(request):
     def process(req):
         f = req.FILES.get('files')
@@ -834,6 +842,7 @@ def rotate_view(request):
     return _process_and_respond(request, 'rotate', process)
 
 
+@csrf_exempt
 def watermark_view(request):
     def process(req):
         f = req.FILES.get('files')
@@ -847,6 +856,7 @@ def watermark_view(request):
     return _process_and_respond(request, 'watermark', process)
 
 
+@csrf_exempt
 def protect_view(request):
     def process(req):
         f = req.FILES.get('files')
@@ -860,6 +870,7 @@ def protect_view(request):
     return _process_and_respond(request, 'protect', process)
 
 
+@csrf_exempt
 def unlock_view(request):
     def process(req):
         f = req.FILES.get('files')
@@ -873,6 +884,7 @@ def unlock_view(request):
     return _process_and_respond(request, 'unlock', process)
 
 
+@csrf_exempt
 def page_numbers_view(request):
     def process(req):
         f = req.FILES.get('files')
@@ -887,6 +899,7 @@ def page_numbers_view(request):
 
 # ─── DOCUMENT SIGNER VIEWS (21 CFR Part 11) ─────────────────────────────────
 
+@csrf_exempt
 def doc_signer_view(request):
     """
     Document Signer tool page - renders the signing interface.
@@ -898,6 +911,7 @@ def doc_signer_view(request):
 
 
 @require_POST
+@csrf_exempt
 def signer_preview_view(request):
     """
     Upload a document and return page preview images for the signer interface.
@@ -1063,6 +1077,7 @@ def verify_signature_view(request, record_id):
 
 # ─── PDF DATA EXTRACTOR VIEWS ───────────────────────────────────────────────
 
+@csrf_exempt
 def data_extractor_view(request):
     """
     Data Extractor tool page — OCR-powered PDF data extraction.
