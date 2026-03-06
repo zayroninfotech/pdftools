@@ -3,8 +3,8 @@ services:
     name: zayron_pdftools
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate --run-syncdb
-    startCommand: gunicorn pdftools.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn pdftools.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
