@@ -1,22 +1,14 @@
 #!/bin/bash
-set -e
 
 echo "Starting PDF Tools application..."
-echo "PORT: $PORT"
-echo "MONGODB_URI: $MONGODB_URI"
-echo "SECRET_KEY: ${SECRET_KEY:0:10}..."
+PORT=${PORT:-8000}
+echo "Using PORT: $PORT"
+echo "MONGODB_URI is set: $([ -z $MONGODB_URI ] && echo 'NO' || echo 'YES')"
 
-# Try to load Django first
-python -c "import django; django.setup()" 2>&1 || {
-    echo "ERROR: Django setup failed!"
-    exit 1
-}
-
-echo "Django setup successful, starting gunicorn..."
-gunicorn pdftools.wsgi:application \
-    --bind 0.0.0.0:${PORT:-8000} \
+# Run gunicorn
+exec gunicorn pdftools.wsgi:application \
+    --bind 0.0.0.0:$PORT \
     --workers 1 \
     --timeout 120 \
     --access-logfile - \
-    --error-logfile - \
-    --log-level debug
+    --error-logfile -
