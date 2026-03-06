@@ -5,6 +5,10 @@ PORT=${PORT:-8000}
 echo "Using PORT: $PORT"
 echo "MONGODB_URI is set: $([ -z $MONGODB_URI ] && echo 'NO' || echo 'YES')"
 
+# Run migrations to create database tables
+echo "Running database migrations..."
+python manage.py migrate --run-syncdb
+
 # Collect static files
 echo "Collecting static files..."
 python manage.py collectstatic --noinput --clear
