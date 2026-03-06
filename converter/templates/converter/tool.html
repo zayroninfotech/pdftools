@@ -1,0 +1,230 @@
+{% extends "converter/base.html" %}
+{% block title %}{{ tool.name }}{% endblock %}
+
+{% block content %}
+<section class="tool-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Tool Header -->
+                <div class="text-center mb-4">
+                    <div class="tool-page-icon" style="background: {{ tool.color }}15; color: {{ tool.color }};">
+                        <i class="fas {{ tool.icon }}"></i>
+                    </div>
+                    <h1 class="tool-page-title">{{ tool.name }}</h1>
+                    <p class="tool-page-desc">{{ tool.description }}</p>
+                </div>
+
+                <!-- Upload Form -->
+                <form id="toolForm" enctype="multipart/form-data" method="post">
+                    {% csrf_token %}
+
+                    <!-- Drag & Drop Zone -->
+                    <div class="upload-zone" id="uploadZone" style="border-color: {{ tool.color }};">
+                        <div class="upload-zone-content">
+                            <i class="fas fa-cloud-upload-alt upload-zone-icon" style="color: {{ tool.color }};"></i>
+                            <h4>Drag & drop your file{% if tool.multiple %}s{% endif %} here</h4>
+                            <p class="text-muted">or click to browse</p>
+                            <button type="button" class="btn btn-upload" style="background: {{ tool.color }}; color: white;" id="selectBtn">
+                                <i class="fas fa-plus me-2"></i>Select File{% if tool.multiple %}s{% endif %}
+                            </button>
+                        </div>
+                        <input type="file" name="files" id="fileInput"
+                               accept="{{ tool.accept }}"
+                               {% if tool.multiple %}multiple{% endif %}
+                               class="d-none">
+                    </div>
+
+                    <!-- Selected Files List -->
+                    <div id="fileList" class="file-list d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="fas fa-file me-2"></i>Selected Files</h5>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="clearFiles">
+                                <i class="fas fa-trash me-1"></i>Clear
+                            </button>
+                        </div>
+                        <div id="fileListItems"></div>
+                    </div>
+
+                    <!-- Tool-Specific Options -->
+                    {% if tool.slug == 'split' %}
+                    <div id="toolOptions" class="tool-options d-none">
+                        <h5><i class="fas fa-cog me-2"></i>Split Options</h5>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="split_mode" value="all" id="splitAll" checked>
+                                <label class="form-check-label" for="splitAll">Split all pages (one PDF per page)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="split_mode" value="ranges" id="splitRanges">
+                                <label class="form-check-label" for="splitRanges">Split by page ranges</label>
+                            </div>
+                        </div>
+                        <div class="mb-3 d-none" id="rangesInput">
+                            <label class="form-label">Page Ranges <small class="text-muted">(e.g., 1-3, 4-6, 7)</small></label>
+                            <input type="text" class="form-control" name="ranges" placeholder="1-3, 4-6, 7-10">
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if tool.slug == 'rotate' %}
+                    <div id="toolOptions" class="tool-options d-none">
+                        <h5><i class="fas fa-cog me-2"></i>Rotation</h5>
+                        <div class="row g-3">
+                            <div class="col-auto">
+                                <div class="rotation-option selected" data-degrees="90">
+                                    <i class="fas fa-rotate-right"></i>
+                                    <span>90&deg;</span>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="rotation-option" data-degrees="180">
+                                    <i class="fas fa-rotate"></i>
+                                    <span>180&deg;</span>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="rotation-option" data-degrees="270">
+                                    <i class="fas fa-rotate-left"></i>
+                                    <span>270&deg;</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="degrees" id="degreesInput" value="90">
+                    </div>
+                    {% endif %}
+
+                    {% if tool.slug == 'watermark' %}
+                    <div id="toolOptions" class="tool-options d-none">
+                        <h5><i class="fas fa-cog me-2"></i>Watermark Options</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Watermark Text</label>
+                            <input type="text" class="form-control" name="watermark_text" value="CONFIDENTIAL" placeholder="Enter watermark text">
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Opacity (0.1 - 1.0)</label>
+                                <input type="range" class="form-range" name="opacity" min="0.1" max="1.0" step="0.1" value="0.3" id="opacityRange">
+                                <small class="text-muted">Opacity: <span id="opacityValue">0.3</span></small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Font Size</label>
+                                <select class="form-select" name="font_size">
+                                    <option value="30">Small (30)</option>
+                                    <option value="60" selected>Medium (60)</option>
+                                    <option value="90">Large (90)</option>
+                                    <option value="120">Extra Large (120)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if tool.slug == 'protect' %}
+                    <div id="toolOptions" class="tool-options d-none">
+                        <h5><i class="fas fa-cog me-2"></i>Password Protection</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Set Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" name="password" id="passwordInput" placeholder="Enter password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if tool.slug == 'unlock' %}
+                    <div id="toolOptions" class="tool-options d-none">
+                        <h5><i class="fas fa-cog me-2"></i>Unlock PDF</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Enter PDF Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" name="password" id="passwordInput" placeholder="Enter the PDF password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if tool.slug == 'page_numbers' %}
+                    <div id="toolOptions" class="tool-options d-none">
+                        <h5><i class="fas fa-cog me-2"></i>Page Number Options</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Position</label>
+                                <select class="form-select" name="position">
+                                    <option value="bottom-center" selected>Bottom Center</option>
+                                    <option value="bottom-left">Bottom Left</option>
+                                    <option value="bottom-right">Bottom Right</option>
+                                    <option value="top-center">Top Center</option>
+                                    <option value="top-left">Top Left</option>
+                                    <option value="top-right">Top Right</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Start Number</label>
+                                <input type="number" class="form-control" name="start_num" value="1" min="1">
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Process Button -->
+                    <div id="processSection" class="text-center d-none">
+                        <button type="submit" class="btn btn-process" style="background: {{ tool.color }};" id="processBtn">
+                            <i class="fas fa-cog me-2"></i>{{ tool.name }}
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Progress Bar -->
+                <div id="progressSection" class="d-none">
+                    <div class="progress-container">
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" id="progressFill" style="background: {{ tool.color }};"></div>
+                        </div>
+                        <p class="progress-text" id="progressText">Processing your file...</p>
+                    </div>
+                </div>
+
+                <!-- Download Section -->
+                <div id="downloadSection" class="d-none">
+                    <div class="download-container">
+                        <div class="download-icon">
+                            <i class="fas fa-check-circle" style="color: #27ae60;"></i>
+                        </div>
+                        <h4>Your file is ready!</h4>
+                        <a id="downloadBtn" href="#" class="btn btn-download" style="background: {{ tool.color }};">
+                            <i class="fas fa-download me-2"></i>Download File
+                        </a>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="startOver">
+                                <i class="fas fa-redo me-1"></i>Start Over
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Section -->
+                <div id="errorSection" class="d-none">
+                    <div class="error-container">
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i>
+                        </div>
+                        <h4>Oops! Something went wrong</h4>
+                        <p id="errorMessage" class="text-muted"></p>
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="tryAgain">
+                            <i class="fas fa-redo me-1"></i>Try Again
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

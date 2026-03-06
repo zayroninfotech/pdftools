@@ -1,0 +1,81 @@
+{% extends "converter/base.html" %}
+{% load static %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h1 class="hero-title">Every tool you need to work with <span class="highlight">PDFs</span></h1>
+                <p class="hero-subtitle">
+                    Merge, split, compress, convert, rotate, unlock, watermark and sign PDFs with just a few clicks.
+                    All tools are <strong>100% FREE</strong> with <strong>unlimited access</strong>!
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Tools Grid -->
+<section class="tools-section">
+    <div class="container">
+        <div class="row text-center mb-4">
+            <div class="col-12">
+                <h2 class="tools-section-title">Our PDF Tools</h2>
+                <p class="tools-section-desc">Choose from our collection of powerful PDF tools</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            {% for tool in tools %}
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <a href="{% url tool.url_name %}" class="tool-card-link">
+                    <div class="tool-card">
+                        <div class="tool-icon" style="background: {{ tool.color }}15; color: {{ tool.color }};">
+                            <i class="fas {{ tool.icon }}"></i>
+                        </div>
+                        <h5 class="tool-name">{{ tool.name }}</h5>
+                        <p class="tool-desc">{{ tool.description }}</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="row text-center mb-4">
+            <div class="col-12">
+                <h2 class="fw-bold">Why choose our PDF Tools?</h2>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                    <h5>Fast Processing</h5>
+                    <p>All tools process your files quickly on our server. No waiting around.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-icon"><i class="fas fa-shield-halved"></i></div>
+                    <h5>Secure</h5>
+                    <p>Your files are automatically deleted after processing. We don't store your data.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-icon"><i class="fas fa-infinity"></i></div>
+                    <h5>100% Free</h5>
+                    <p>All tools are completely free to use. No hidden costs or limitations.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

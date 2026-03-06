@@ -1,0 +1,243 @@
+{% extends "converter/base.html" %}
+{% load static %}
+{% block title %}Document Signer{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'converter/css/signer.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<section class="tool-page">
+    <div class="container">
+        <!-- Tool Header -->
+        <div class="text-center mb-4">
+            <div class="tool-page-icon" style="background: {{ tool.color }}15; color: {{ tool.color }};">
+                <i class="fas {{ tool.icon }}"></i>
+            </div>
+            <h1 class="tool-page-title">{{ tool.name }}</h1>
+            <p class="tool-page-desc">{{ tool.description }}</p>
+            <div class="badge bg-dark mt-2">
+                <i class="fas fa-shield-halved me-1"></i>21 CFR Part 11 Compliant
+            </div>
+        </div>
+
+        <!-- Upload Form -->
+        <div id="signerUploadSection">
+            <form id="signerUploadForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="upload-zone" id="signerUploadZone" style="border-color: {{ tool.color }};">
+                    <div class="upload-zone-content">
+                        <i class="fas fa-cloud-upload-alt upload-zone-icon" style="color: {{ tool.color }};"></i>
+                        <h4>Drag & drop your PDF or Word document here</h4>
+                        <p class="text-muted">or click to browse</p>
+                        <button type="button" class="btn btn-upload" style="background: {{ tool.color }}; color: white;" id="signerSelectBtn">
+                            <i class="fas fa-plus me-2"></i>Select Document
+                        </button>
+                    </div>
+                    <input type="file" name="file" id="signerFileInput"
+                           accept=".pdf,.docx,.doc" class="d-none">
+                </div>
+            </form>
+        </div>
+
+        <!-- Signing Interface (shown after upload) -->
+        <div id="signerInterface" class="d-none">
+            <div class="row g-4">
+                <!-- LEFT: Document Preview -->
+                <div class="col-lg-7">
+                    <div class="signer-preview-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                <span id="signerDocName">Document</span>
+                            </h5>
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-sm btn-outline-secondary" id="prevPage" disabled>
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span class="text-muted" id="pageIndicator">Page 1 / 1</span>
+                                <button class="btn btn-sm btn-outline-secondary" id="nextPage" disabled>
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="signer-preview-container" id="previewContainer">
+                            <div class="signer-loading" id="previewLoading">
+                                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                                <p class="mt-2">Loading preview...</p>
+                            </div>
+                            <img id="previewImage" class="signer-preview-img d-none" alt="Document Preview">
+                            <!-- Signature marker (draggable) -->
+                            <div id="signatureMarker" class="signature-marker d-none">
+                                <i class="fas fa-signature me-1"></i>
+                                <span>Signature</span>
+                            </div>
+                        </div>
+
+                        <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">
+                            <i class="fas fa-hand-pointer me-1"></i>
+                            Click on the document where you want to place the signature.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Signature Details -->
+                <div class="col-lg-5">
+                    <div class="signer-form-card">
+                        <h5 class="fw-bold mb-3">
+                            <i class="fas fa-pen-nib me-2" style="color: {{ tool.color }};"></i>
+                            Signature Details
+                        </h5>
+
+                        <form id="signForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="file_path" id="signerFilePath">
+                            <input type="hidden" name="original_name" id="signerOriginalName">
+                            <input type="hidden" name="position_x" id="signerPosX" value="0">
+                            <input type="hidden" name="position_y" id="signerPosY" value="0">
+                            <input type="hidden" name="page_number" id="signerPageNum" value="1">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Full Name *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control" name="signer_name"
+                                           id="signerName" placeholder="Enter your full name" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Email *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" class="form-control" name="signer_email"
+                                           id="signerEmail" placeholder="your@email.com" required
+                                           {% if user.is_authenticated %}value="{{ user.email }}"{% endif %}>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Date & Time</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                    <input type="text" class="form-control" id="signerDateTime"
+                                           readonly disabled>
+                                </div>
+                                <small class="text-muted">Auto-populated with current date and time (UTC)</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Meaning of Signature *</label>
+                                <select class="form-select" name="meaning" id="signerMeaning" required>
+                                    {% for value, label in meaning_choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Per 21 CFR Part 11 - indicates the intent of the signer</small>
+                            </div>
+
+                            {% if user.is_authenticated %}
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-lock me-1"></i>Re-enter Password *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                    <input type="password" class="form-control" name="password"
+                                           id="signerPassword" placeholder="Re-authenticate to sign" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleSignerPw">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">21 CFR Part 11 requires signer authentication</small>
+                            </div>
+                            {% endif %}
+
+                            <!-- Signature placement status -->
+                            <div class="signer-placement-status mb-3" id="placementStatus">
+                                <i class="fas fa-exclamation-circle text-warning me-1"></i>
+                                <span class="text-muted">Click on the document to place your signature</span>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-lg fw-bold" id="signBtn"
+                                        style="background: {{ tool.color }}; color: white;" disabled>
+                                    <i class="fas fa-file-signature me-2"></i>Sign Document
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="signerStartOver">
+                                    <i class="fas fa-redo me-1"></i>Start Over
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 21 CFR Part 11 Info -->
+                    <div class="cfr-info-card mt-3">
+                        <h6 class="fw-bold mb-2">
+                            <i class="fas fa-shield-halved me-2"></i>21 CFR Part 11 Compliance
+                        </h6>
+                        <ul class="mb-0" style="font-size: 0.82rem;">
+                            <li>Signer identity linked to signature</li>
+                            <li>Date, time, and meaning recorded</li>
+                            <li>Document integrity verified via SHA-512</li>
+                            <li>Immutable audit trail maintained</li>
+                            <li>Signature cannot be separated from record</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signing Progress -->
+        <div id="signerProgress" class="d-none">
+            <div class="progress-container">
+                <div class="progress-bar-custom">
+                    <div class="progress-fill" id="signerProgressFill" style="background: {{ tool.color }};"></div>
+                </div>
+                <p class="progress-text" id="signerProgressText">Applying signature...</p>
+            </div>
+        </div>
+
+        <!-- Download Section -->
+        <div id="signerDownload" class="d-none">
+            <div class="download-container">
+                <div class="download-icon">
+                    <i class="fas fa-check-circle" style="color: #27ae60;"></i>
+                </div>
+                <h4>Document Signed Successfully!</h4>
+                <p class="text-muted" id="signerSigId"></p>
+                <a id="signerDownloadBtn" href="#" class="btn btn-download" style="background: {{ tool.color }};">
+                    <i class="fas fa-download me-2"></i>Download Signed Document
+                </a>
+                <div class="mt-3">
+                    <a id="signerVerifyLink" href="#" class="btn btn-outline-success btn-sm me-2" target="_blank">
+                        <i class="fas fa-shield-check me-1"></i>Verify Signature
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="signerNewDoc">
+                        <i class="fas fa-redo me-1"></i>Sign Another Document
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="signerError" class="d-none">
+            <div class="error-container">
+                <div class="error-icon">
+                    <i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i>
+                </div>
+                <h4>Signing Failed</h4>
+                <p id="signerErrorMsg" class="text-muted"></p>
+                <button type="button" class="btn btn-outline-danger btn-sm" id="signerRetry">
+                    <i class="fas fa-redo me-1"></i>Try Again
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'converter/js/signer.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends "converter/base.html" %}
+{% load static %}
+{% block title %}PDF Data Extractor{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'converter/css/extractor.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<section class="tool-page">
+    <div class="container-fluid px-3 px-lg-4">
+
+        <!-- Tool Header -->
+        <div class="text-center mb-4">
+            <div class="tool-page-icon" style="background: #e6520015; color: #e65200;">
+                <i class="fas fa-database"></i>
+            </div>
+            <h1 class="tool-page-title">PDF Data Extractor</h1>
+            <p class="tool-page-desc">
+                Upload a PDF — view it on the left, extracted data on the right.
+                Auto-detect fields or manually select. Download as <strong>Excel</strong>, <strong>JSON</strong> or <strong>CSV</strong>.
+            </p>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="uploadSection" class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="upload-zone" id="extractUploadZone" style="border-color: #e65200;">
+                    <div class="upload-zone-content">
+                        <i class="fas fa-cloud-upload-alt upload-zone-icon" style="color: #e65200;"></i>
+                        <h4>Upload your PDF to extract data</h4>
+                        <p class="text-muted">Supports invoices, receipts, forms &amp; scanned documents</p>
+                        <button type="button" class="btn btn-upload" style="background: #e65200; color: white;" id="extractSelectBtn">
+                            <i class="fas fa-plus me-2"></i>Select PDF
+                        </button>
+                    </div>
+                    <input type="file" id="extractFileInput" accept=".pdf" class="d-none">
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Progress (full-width) -->
+        <div id="extractProgress" class="d-none">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="progress-container">
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" id="extractProgressFill" style="background: #e65200;"></div>
+                        </div>
+                        <p class="progress-text" id="extractProgressText">Analyzing document...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ SPLIT PANEL: PDF Preview (Left) + Extracted Data (Right) ═══ -->
+        <div id="extractResults" class="d-none">
+            <div class="row g-3">
+
+                <!-- ─── LEFT: PDF Preview Panel ─── -->
+                <div class="col-lg-6">
+                    <div class="pdf-preview-panel">
+                        <!-- File Info Bar -->
+                        <div class="preview-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-file-pdf text-danger"></i>
+                                <span class="fw-semibold preview-filename" id="previewFileName">document.pdf</span>
+                                <span class="text-muted preview-filesize" id="previewFileSize"></span>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="extractStartOver" title="Start Over">
+                                <i class="fas fa-times me-1"></i>New File
+                            </button>
+                        </div>
+
+                        <!-- Page Navigation -->
+                        <div class="page-nav">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="prevPage" disabled>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span class="page-indicator">
+                                Page <strong id="currentPageNum">1</strong> of <strong id="totalPageNum">1</strong>
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="nextPage" disabled>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <div class="ms-auto d-flex gap-1">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="zoomOut" title="Zoom Out">
+                                    <i class="fas fa-search-minus"></i>
+                                </button>
+                                <span class="zoom-level" id="zoomLevel">100%</span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="zoomIn" title="Zoom In">
+                                    <i class="fas fa-search-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PDF Page Display -->
+                        <div class="pdf-viewer" id="pdfViewer">
+                            <div class="pdf-page-container" id="pdfPageContainer">
+                                <img id="pdfPageImg" src="" alt="PDF Page" class="pdf-page-img">
+                            </div>
+                        </div>
+
+                        <!-- Extraction Method Badge -->
+                        <div class="extraction-info-bar">
+                            <span class="badge bg-info" id="extractMethod">TEXT</span>
+                            <span class="text-muted small">
+                                <i class="fas fa-file-alt me-1"></i>
+                                <span id="statPages">0</span> pages &middot;
+                                <span id="statChars">0</span> characters
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─── RIGHT: Extracted Data Panel ─── -->
+                <div class="col-lg-6">
+                    <div class="data-panel">
+
+                        <!-- Panel Header -->
+                        <div class="data-panel-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-check-circle text-success me-2"></i>Extracted Data
+                            </h5>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-secondary" id="statFieldsBadge">0 fields</span>
+                                <span class="badge bg-secondary" id="statItemsBadge">0 items</span>
+                            </div>
+                        </div>
+
+                        <!-- Toggle: Auto-detected vs All Key-Value Pairs -->
+                        <div class="data-tabs">
+                            <button type="button" class="data-tab active" data-tab="fields">
+                                <i class="fas fa-magic me-1"></i>Auto-Detected
+                            </button>
+                            <button type="button" class="data-tab" data-tab="keyvalue">
+                                <i class="fas fa-list me-1"></i>All Key-Values
+                            </button>
+                            <button type="button" class="data-tab" data-tab="lineitems">
+                                <i class="fas fa-table me-1"></i>Line Items
+                            </button>
+                            <button type="button" class="data-tab" data-tab="rawtext">
+                                <i class="fas fa-align-left me-1"></i>Raw Text
+                            </button>
+                        </div>
+
+                        <!-- Tab Content: Auto-detected Fields -->
+                        <div class="data-tab-content active" id="tabFields">
+                            <div class="fields-checklist" id="fieldsChecklist">
+                                <!-- Dynamically populated -->
+                            </div>
+                            <div class="no-data-msg d-none" id="noFieldsMsg">
+                                <i class="fas fa-info-circle me-2"></i>No auto-detected fields found.
+                            </div>
+                        </div>
+
+                        <!-- Tab Content: All Key-Value Pairs -->
+                        <div class="data-tab-content" id="tabKeyValue">
+                            <div class="kv-list" id="kvList">
+                                <!-- Dynamically populated -->
+                            </div>
+                            <div class="no-data-msg d-none" id="noKvMsg">
+                                <i class="fas fa-info-circle me-2"></i>No key-value pairs detected.
+                            </div>
+                        </div>
+
+                        <!-- Tab Content: Line Items -->
+                        <div class="data-tab-content" id="tabLineItems">
+                            <div class="table-responsive" id="lineItemsTable">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th><input type="checkbox" id="selectAllItems" checked></th>
+                                            <th>Description</th>
+                                            <th>Value 1</th>
+                                            <th>Value 2</th>
+                                            <th>Value 3</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="lineItemsBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="no-data-msg d-none" id="noItemsMsg">
+                                <i class="fas fa-info-circle me-2"></i>No line items detected.
+                            </div>
+                        </div>
+
+                        <!-- Tab Content: Raw Text -->
+                        <div class="data-tab-content" id="tabRawText">
+                            <pre class="raw-text-box" id="rawTextPreview">(No text extracted)</pre>
+                        </div>
+
+                        <!-- Download Section -->
+                        <div class="download-bar">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <label class="fw-semibold small mb-0">Format:</label>
+                                <select class="form-select form-select-sm download-format-select" id="downloadFormat">
+                                    <option value="excel" selected>Excel (.xlsx)</option>
+                                    <option value="json">JSON (.json)</option>
+                                    <option value="csv">CSV (.csv)</option>
+                                </select>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="cancelExtract">
+                                    <i class="fas fa-times me-1"></i>Cancel
+                                </button>
+                                <button type="button" class="btn btn-sm btn-download-action" id="downloadBtn">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="extractError" class="d-none">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="error-container">
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i>
+                        </div>
+                        <h4>Extraction Failed</h4>
+                        <p id="extractErrorMsg" class="text-muted"></p>
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="extractTryAgain">
+                            <i class="fas fa-redo me-1"></i>Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'converter/js/extractor.js' %}"></script>
+{% endblock %}

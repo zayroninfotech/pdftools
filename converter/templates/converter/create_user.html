@@ -1,0 +1,77 @@
+{% extends "converter/base.html" %}
+{% block title %}Create User{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="admin-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="fw-bold mb-0">
+                            <i class="fas fa-user-plus me-2"></i>Create New User
+                        </h2>
+                        <a href="{% url 'converter:user_management' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Back
+                        </a>
+                    </div>
+
+                    {% if error %}
+                    <div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>{{ error }}</div>
+                    {% endif %}
+                    {% if success %}
+                    <div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>{{ success }}</div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Username *</label>
+                                <input type="text" class="form-control" name="username" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Email *</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">First Name</label>
+                                <input type="text" class="form-control" name="first_name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Last Name</label>
+                                <input type="text" class="form-control" name="last_name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Password *</label>
+                                <input type="password" class="form-control" name="password" required minlength="8">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Role *</label>
+                                <select class="form-select" name="role" required>
+                                    {% for value, label in available_roles %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Phone</label>
+                                <input type="text" class="form-control" name="phone">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Company</label>
+                                <input type="text" class="form-control" name="company">
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Create User
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

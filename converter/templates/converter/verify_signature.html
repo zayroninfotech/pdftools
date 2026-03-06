@@ -1,0 +1,118 @@
+{% extends "converter/base.html" %}
+{% block title %}Verify Signature{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                {% if signature %}
+                <div class="admin-card">
+                    <div class="text-center mb-4">
+                        {% if integrity_ok %}
+                        <div class="mb-3">
+                            <i class="fas fa-check-circle" style="font-size: 4rem; color: #27ae60;"></i>
+                        </div>
+                        <h2 class="fw-bold text-success">Signature Verified</h2>
+                        <p class="text-muted">This electronic signature is authentic and the record has not been tampered with.</p>
+                        {% else %}
+                        <div class="mb-3">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #e74c3c;"></i>
+                        </div>
+                        <h2 class="fw-bold text-danger">Integrity Warning</h2>
+                        <p class="text-muted">The signature record checksum does not match. This record may have been tampered with.</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="border-top pt-3">
+                        <h5 class="fw-bold mb-3">
+                            <i class="fas fa-file-signature me-2"></i>Signature Details
+                        </h5>
+
+                        <table class="table table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted fw-semibold" style="width: 180px;">Signature ID</td>
+                                    <td><code>{{ signature.id }}</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-semibold">Signer Name</td>
+                                    <td class="fw-bold">{{ signature.signer_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-semibold">Signer Email</td>
+                                    <td>{{ signature.signer_email }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-semibold">Meaning</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ signature.get_meaning_display }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-semibold">Signed At</td>
+                                    <td>{{ signature.signed_at|date:"Y-m-d H:i:s" }} UTC</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-semibold">Document</td>
+                                    <td>{{ signature.document_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-semibold">Page / Position</td>
+                                    <td>Page {{ signature.page_number }} ({{ signature.position_x|floatformat:0 }}, {{ signature.position_y|floatformat:0 }})</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-semibold">Authenticated</td>
+                                    <td>
+                                        {% if signature.is_authenticated %}
+                                        <span class="badge bg-success"><i class="fas fa-check me-1"></i>Yes</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">No (Anonymous)</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-semibold">IP Address</td>
+                                    <td class="text-muted">{{ signature.ip_address }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="border-top pt-3 mt-3">
+                        <h6 class="fw-bold mb-2">
+                            <i class="fas fa-fingerprint me-2"></i>Document Integrity Hashes
+                        </h6>
+                        <div class="mb-2">
+                            <small class="text-muted d-block">Original Document (SHA-512)</small>
+                            <code style="font-size: 0.7rem; word-break: break-all;">{{ signature.document_hash_before }}</code>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Signed Document (SHA-512)</small>
+                            <code style="font-size: 0.7rem; word-break: break-all;">{{ signature.document_hash_after }}</code>
+                        </div>
+                    </div>
+
+                    <div class="cfr-badge text-center mt-4">
+                        <span class="badge bg-dark px-3 py-2">
+                            <i class="fas fa-shield-halved me-1"></i>21 CFR Part 11 Electronic Signature Record
+                        </span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="admin-card text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-search" style="font-size: 4rem; color: var(--text-muted);"></i>
+                    </div>
+                    <h3 class="fw-bold">Signature Not Found</h3>
+                    <p class="text-muted">No signature record exists for the provided ID.</p>
+                    <a href="/" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Go Home
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

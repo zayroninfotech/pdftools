@@ -1,0 +1,93 @@
+{% extends "converter/base.html" %}
+{% block title %}Audit Log{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="fw-bold mb-1">
+                            <i class="fas fa-clipboard-list me-2"></i>Audit Log
+                        </h2>
+                        <p class="text-muted mb-0">21 CFR Part 11 compliant audit trail - Read Only</p>
+                    </div>
+                    <span class="badge bg-warning text-dark">
+                        <i class="fas fa-lock me-1"></i>Immutable Records
+                    </span>
+                </div>
+
+                <!-- Filter -->
+                <div class="admin-card mb-4">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Filter by Action</label>
+                            <select class="form-select" name="action">
+                                <option value="">All Actions</option>
+                                {% for value, label in action_choices %}
+                                <option value="{{ value }}" {% if action_filter == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-filter me-1"></i>Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Audit Table -->
+                <div class="admin-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>Action</th>
+                                    <th>Detail</th>
+                                    <th>Document</th>
+                                    <th>IP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td class="text-nowrap">{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                    <td class="fw-semibold">{{ log.username|default:"-" }}</td>
+                                    <td>{{ log.email|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge
+                                            {% if log.action == 'sign' %}bg-success
+                                            {% elif log.action == 'login' %}bg-info
+                                            {% elif log.action == 'login_failed' %}bg-danger
+                                            {% elif log.action == 'limit_reached' %}bg-warning text-dark
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ log.get_action_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-muted" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ log.detail|truncatechars:60 }}
+                                    </td>
+                                    <td>{{ log.document_name|default:"-"|truncatechars:30 }}</td>
+                                    <td class="text-muted">{{ log.ip_address|default:"-" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">No audit records found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

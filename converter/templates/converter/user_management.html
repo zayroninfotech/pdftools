@@ -1,0 +1,139 @@
+{% extends "converter/base.html" %}
+{% block title %}Manage Users{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="fw-bold mb-1"><i class="fas fa-users me-2"></i>User Management</h2>
+                        <p class="text-muted mb-0">Manage user accounts and roles</p>
+                    </div>
+                    <a href="{% url 'converter:create_user' %}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Create User
+                    </a>
+                </div>
+
+                <!-- Filters -->
+                <div class="admin-card mb-4">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Search</label>
+                            <input type="text" class="form-control" name="search"
+                                   value="{{ search }}" placeholder="Search by name, email...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" name="role">
+                                <option value="">All Roles</option>
+                                {% for value, label in role_choices %}
+                                <option value="{{ value }}" {% if role_filter == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-search me-1"></i>Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Users Table -->
+                <div class="admin-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in users %}
+                                <tr id="user-row-{{ u.pk }}">
+                                    <td class="fw-semibold">{{ u.username }}</td>
+                                    <td>{{ u.first_name }} {{ u.last_name }}</td>
+                                    <td>{{ u.email }}</td>
+                                    <td>
+                                        <span class="badge role-badge-{{ u.role }}">
+                                            {{ u.get_role_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if u.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ u.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'converter:edit_user' u.pk %}"
+                                           class="btn btn-sm btn-outline-primary me-1">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if u != request.user %}
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                onclick="deactivateUser({{ u.pk }}, '{{ u.username }}')">
+                                            <i class="fas fa-user-slash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        No users found.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deactivateUser(userId, username) {
+    if (!confirm('Are you sure you want to deactivate user "' + username + '"?')) return;
+
+    fetch('/users/' + userId + '/delete/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': window.PDFTOOLS_CONFIG.csrfToken,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            var row = document.getElementById('user-row-' + userId);
+            if (row) {
+                row.style.opacity = '0.5';
+                var statusCell = row.cells[4];
+                statusCell.innerHTML = '<span class="badge bg-danger">Inactive</span>';
+            }
+            alert(data.message);
+        } else {
+            alert(data.error || 'Error deactivating user');
+        }
+    })
+    .catch(function() { alert('Network error'); });
+}
+</script>
+{% endblock %}

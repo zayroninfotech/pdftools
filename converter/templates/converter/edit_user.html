@@ -1,0 +1,86 @@
+{% extends "converter/base.html" %}
+{% block title %}Edit User{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="admin-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="fw-bold mb-0">
+                            <i class="fas fa-user-edit me-2"></i>Edit User: {{ edit_user.username }}
+                        </h2>
+                        <a href="{% url 'converter:user_management' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Back
+                        </a>
+                    </div>
+
+                    {% if error %}
+                    <div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>{{ error }}</div>
+                    {% endif %}
+                    {% if success %}
+                    <div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>{{ success }}</div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Username</label>
+                                <input type="text" class="form-control" value="{{ edit_user.username }}" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Email</label>
+                                <input type="email" class="form-control" name="email" value="{{ edit_user.email }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">First Name</label>
+                                <input type="text" class="form-control" name="first_name" value="{{ edit_user.first_name }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Last Name</label>
+                                <input type="text" class="form-control" name="last_name" value="{{ edit_user.last_name }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">New Password <small class="text-muted">(leave blank to keep)</small></label>
+                                <input type="password" class="form-control" name="password" minlength="8">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Role</label>
+                                <select class="form-select" name="role">
+                                    {% for value, label in available_roles %}
+                                    <option value="{{ value }}" {% if edit_user.role == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Phone</label>
+                                <input type="text" class="form-control" name="phone" value="{{ edit_user.phone }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Company</label>
+                                <input type="text" class="form-control" name="company" value="{{ edit_user.company }}">
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="is_active"
+                                           id="isActive" {% if edit_user.is_active %}checked{% endif %}>
+                                    <label class="form-check-label fw-semibold" for="isActive">Account Active</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
