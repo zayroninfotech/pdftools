@@ -300,10 +300,12 @@ def _tool_context(slug, extra=None):
     return ctx
 
 
+@csrf_exempt
 def _process_and_respond(request, slug, process_fn):
     """
     Unified tool view handler. Free access — no usage limits.
     Only requires anonymous users to provide their email first.
+    CSRF exempted for file upload processing.
     """
     if request.method == 'POST':
         # Check if anonymous user has email set
