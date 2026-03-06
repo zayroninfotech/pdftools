@@ -21,6 +21,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "192.168.1.35",
     ".onrender.com",
+    ".up.railway.app",
     os.environ.get('RENDER_EXTERNAL_HOSTNAME', ''),
 ]
 # Application definition
