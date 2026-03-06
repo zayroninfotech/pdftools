@@ -218,6 +218,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var xhr = new XMLHttpRequest();
             xhr.open('POST', window.location.pathname, true);
+            // Add CSRF token header for Django
+            xhr.setRequestHeader('X-CSRFToken', config.csrfToken);
 
             xhr.onload = function () {
                 try {
