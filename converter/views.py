@@ -669,45 +669,58 @@ def check_email_view(request):
     if not email or '@' not in email:
         return JsonResponse({'error': 'Please enter a valid email address.'}, status=400)
 
-    # Ensure session exists
-    if not request.session.session_key:
-        request.session.create()
+    try:
+        # Ensure session exists
+        if not request.session.session_key:
+            request.session.create()
 
-    session_key = request.session.session_key
-    ip_address = _get_client_ip(request)
-    user_agent = request.META.get('HTTP_USER_AGENT', '')[:500]
+        session_key = request.session.session_key
+        ip_address = _get_client_ip(request)
+        user_agent = request.META.get('HTTP_USER_AGENT', '')[:500]
 
-    # Store email in Django session
-    request.session['anonymous_email'] = email
+        # Store email in Django session
+        request.session['anonymous_email'] = email
 
-    # Store email in MongoDB (auto-creates collection)
-    mdb.store_email(
-        email=email,
-        ip_address=ip_address,
-        user_agent=user_agent,
-        session_key=session_key,
-    )
-
-    # Audit trail
-    audit = AuditTrail.log(
-        action='session_start',
-        request=request,
-        email=email,
-        detail=f'Email submitted: {email}',
-    )
-    if audit:
-        mdb.log_audit(
-            audit_id=audit.id, email=audit.email, username=audit.username,
-            action=audit.action, detail=audit.detail,
-            ip_address=str(audit.ip_address) if audit.ip_address else None,
-            user_agent=audit.user_agent, timestamp=audit.timestamp,
-            checksum=audit.checksum,
+        # Store email in MongoDB (auto-creates collection)
+        mdb.store_email(
+            email=email,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            session_key=session_key,
         )
 
-    return JsonResponse({
-        'success': True,
-        'message': 'Email registered. Enjoy unlimited free access!',
-    })
+        # Audit trail
+        try:
+            audit = AuditTrail.log(
+                action='session_start',
+                request=request,
+                email=email,
+                detail=f'Email submitted: {email}',
+            )
+            if audit:
+                mdb.log_audit(
+                    audit_id=audit.id, email=audit.email, username=audit.username,
+                    action=audit.action, detail=audit.detail,
+                    ip_address=str(audit.ip_address) if audit.ip_address else None,
+                    user_agent=audit.user_agent, timestamp=audit.timestamp,
+                    checksum=audit.checksum,
+                )
+        except Exception as audit_err:
+            # Log audit error but don't fail the request
+            import logging as log
+            log.getLogger(__name__).error(f"Audit logging failed: {audit_err}")
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Email registered. Enjoy unlimited free access!',
+        })
+    except Exception as e:
+        import logging as log
+        log.getLogger(__name__).error(f"Email check failed: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'error': 'Failed to process email. Please try again.',
+            'detail': str(e) if settings.DEBUG else None,
+        }, status=500)
 
 
 # ─── AUDIT LOG VIEW (Admin only) ────────────────────────────────────────────
