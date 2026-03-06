@@ -160,7 +160,7 @@ SESSION_SAVE_EVERY_REQUEST = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
-CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # Allow JS to access CSRF token for AJAX requests
 CSRF_COOKIE_SAMESITE = 'Lax'
 
 # Production settings (uncomment when deploying with HTTPS):
