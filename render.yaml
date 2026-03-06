@@ -13,6 +13,6 @@ services:
       - key: DEBUG
         value: "False"
       - key: MONGODB_URI
-        sync: false
+        value: mongodb://mongo:urwzEMThWLshZHvkQSDlrFWlUhHOkISr@interchange.proxy.rlwy.net:33907
       - key: MONGODB_NAME
         value: pdftools
