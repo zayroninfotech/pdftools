@@ -31,9 +31,7 @@ pymongo==4.16.0
 dnspython==2.8.0
 
 # ── Security / Auth ──────────────────────────────────────────────────────────
-cryptography==46.0.5
-cffi==2.0.0
-pycparser==3.0
+cryptography==43.0.0
 pyotp==2.9.0
 qrcode==8.2
 
@@ -50,11 +48,7 @@ ua-parser-builtins==202603
 user-agents==2.2.0
 
 # ── HTTP / Network ───────────────────────────────────────────────────────────
-requests==2.32.5
-certifi==2026.2.25
-idna==3.11
-urllib3==2.6.3
-charset-normalizer==3.4.4
+requests==2.31.0
 
 # ── Utilities ────────────────────────────────────────────────────────────────
 python-dateutil==2.9.0.post0
