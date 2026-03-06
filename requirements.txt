@@ -37,15 +37,10 @@ qrcode==8.2
 
 # ── Scheduling ───────────────────────────────────────────────────────────────
 APScheduler==3.11.2
-tzlocal==5.3.1
-wrapt==2.1.1
 
 # ── Django Extensions ────────────────────────────────────────────────────────
 django-cors-headers==4.9.0
 django-user-agents==0.4.0
-ua-parser==1.0.1
-ua-parser-builtins==202603
-user-agents==2.2.0
 
 # ── HTTP / Network ───────────────────────────────────────────────────────────
 requests==2.31.0
