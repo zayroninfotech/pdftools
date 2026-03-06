@@ -47,6 +47,7 @@ urlpatterns = [
     # PDF Data Extractor (OCR-based)
     path('data-extractor/', views.data_extractor_view, name='data_extractor'),
     path('extract-data/', views.extract_data_view, name='extract_data'),
+    path('extractor-process/', views.extract_data_view, name='extractor_process'),  # Alias for frontend
 
     # File download
     path('download/<str:filename>/', views.download_file, name='download'),

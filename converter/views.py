@@ -935,6 +935,7 @@ def signer_preview_view(request):
 
 
 @require_POST
+@csrf_exempt
 def sign_document_view(request):
     """
     Apply electronic signature to document (21 CFR Part 11 compliant).
@@ -1089,6 +1090,7 @@ def data_extractor_view(request):
 
 
 @require_POST
+@csrf_exempt
 def extract_data_view(request):
     """
     Process PDF and extract data using text extraction + OCR.
