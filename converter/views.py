@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.utils import timezone
 from . import utils
 from .models import (
@@ -653,6 +653,7 @@ def delete_user_view(request, pk):
 
 # ─── ANONYMOUS EMAIL CHECK ──────────────────────────────────────────────────
 
+@csrf_exempt
 @require_POST
 def check_email_view(request):
     """
